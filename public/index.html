@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Campus Ops &mdash; Smart &amp; Safe Campus ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============================= LOGIN SCREEN ============================= -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark" style="width:48px;height:48px;font-size:18px;">CO</div>
+      <div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--ink-900);">Campus Ops</div>
+        <div style="font-size:12px;color:var(--ink-500);">Unified ERP &amp; Safety Console</div>
+      </div>
+    </div>
+    <h2 class="login-title">Sign In to your portal</h2>
+    <div class="login-error" id="loginError" hidden></div>
+    <form id="loginForm" class="stacked-form">
+      <div class="field">
+        <label>Username</label>
+        <input class="input" id="loginUsername" name="username" required autocomplete="username" placeholder="e.g. admin or ananya.rajan" />
+      </div>
+      <div class="field">
+        <label style="display:flex; justify-content:space-between;">
+          <span>Password</span>
+          <a href="#" id="forgotPasswordLink" style="font-size:11px; color:var(--teal-600); text-decoration:none;">Forgot Password?</a>
+        </label>
+        <input class="input" id="loginPassword" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn btn-primary" id="loginBtn" style="margin-top:4px;">Sign In &rarr;</button>
+    </form>
+    
+    <!-- Forgot Password Form (hidden by default) -->
+    <form id="forgotPasswordForm" class="stacked-form" hidden style="margin-top:10px;">
+      <p style="font-size:12px; color:var(--ink-500); margin-bottom:10px;">Enter your username and your desired new password. The admin will review and approve your request.</p>
+      <div class="field">
+        <label>Username</label>
+        <input class="input" id="resetUsername" required placeholder="Your username" />
+      </div>
+      <div class="field">
+        <label>Desired New Password</label>
+        <input class="input" id="resetDesiredPassword" type="password" required placeholder="New password" />
+      </div>
+      <button type="submit" class="btn btn-primary" style="margin-top:4px;">Submit Request</button>
+      <button type="button" class="btn btn-ghost" id="backToLoginLink" style="margin-top:4px; font-size:12px;">&larr; Back to Login</button>
+    </form>
+
+    <div class="login-hint-box" id="loginHintBox">
+      <div class="login-hint-title">&#128273; Demo Credentials</div>
+      <div class="login-hints">
+        <div class="hint-row"><span class="hint-role role-admin">Admin</span><code>admin / admin123</code></div>
+        <div class="hint-row"><span class="hint-role role-teacher">Teacher</span><code>prof.kumar / teach123</code></div>
+        <div class="hint-row"><span class="hint-role role-student">Student</span><code>ananya.rajan / student123</code></div>
+        <div class="hint-row"><span class="hint-role role-parent">Parent</span><code>rakesh.rajan / parent123</code></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= APP SHELL ============================= -->
+<div class="app-shell" id="appShell">
+
+  <!-- ============================= SIDEBAR ============================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CO</div>
+      <div class="brand-text">
+        <span class="brand-name">Campus Ops</span>
+        <span class="brand-sub">Unified ERP &amp; Safety Console</span>
+      </div>
+    </div>
+
+    <!-- Role badge -->
+    <div class="role-badge-wrap" id="roleBadgeWrap">
+      <span class="role-badge" id="roleBadge">Admin</span>
+      <span class="role-user" id="roleUser">Campus Administrator</span>
+    </div>
+
+    <nav class="nav-groups" id="navGroups">
+      <!-- Populated dynamically by app.js based on role -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-led"></div>
+      <div style="flex:1;">
+        <div class="status-title">System Online</div>
+        <div class="status-sub" id="clockDisplay">--:--:--</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="changePasswordBtn" title="Change Password" style="color:#8CA0B8;font-size:12px;margin-right:5px;">&#128274; Pwd</button>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn" title="Sign out" style="color:#8CA0B8;font-size:12px;">&#x2715; Out</button>
+    </div>
+  </aside>
+
+  <!-- ============================== MAIN ================================ -->
+  <div class="main-area">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="kpi-strip" id="kpiStrip">
+        <div class="kpi-card">
+          <span class="kpi-label">Total Students</span>
+          <span class="kpi-value" id="kpiTotalStudents">&mdash;</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Attendance Rate</span>
+          <span class="kpi-value" id="kpiAttendance">&mdash;</span>
+        </div>
+        <div class="kpi-card kpi-warn">
+          <span class="kpi-label">Outstanding Dues</span>
+          <span class="kpi-value" id="kpiDues">&mdash;</span>
+        </div>
+        <div class="kpi-card kpi-danger">
+          <span class="kpi-label">Active SOS Alerts</span>
+          <span class="kpi-value" id="kpiSos">&mdash;</span>
+        </div>
+      </div>
+
+      <button class="sos-trigger" id="sosButton" title="Women's Safety / Panic Emergency SOS">
+        <span class="sos-ring"></span>
+        <span class="sos-icon">&#9888;</span>
+        <span class="sos-label">SOS</span>
+      </button>
+    </header>
+
+    <!-- Broadcast banner -->
+    <div class="broadcast-banner" id="broadcastBanner" hidden></div>
+
+    <!-- ============================================================
+         ADMIN MODULES (unchanged)
+         ============================================================ -->
+
+    <!-- MODULE: OVERVIEW -->
+    <section class="module" id="module-overview">
+      <div class="module-head">
+        <h1>Campus Overview</h1>
+        <p class="module-sub">Live snapshot of academic operations and campus safety, refreshed in real time.</p>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <h2 class="panel-title">Occupancy Readout</h2>
+          <div class="bar-row">
+            <span class="bar-label">Hostel Occupancy</span>
+            <div class="bar-track"><div class="bar-fill fill-teal" id="barHostel"></div></div>
+            <span class="bar-value" id="barHostelValue">&mdash;</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Transport Occupancy</span>
+            <div class="bar-track"><div class="bar-fill fill-amber" id="barTransport"></div></div>
+            <span class="bar-value" id="barTransportValue">&mdash;</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Present Today</span>
+            <div class="bar-track"><div class="bar-fill fill-green" id="barPresent"></div></div>
+            <span class="bar-value" id="barPresentValue">&mdash;</span>
+          </div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">Live Safety Feed</h2>
+          <div class="feed-list" id="overviewFeed"><div class="empty-state">No recent events.</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2 class="panel-title">Fee Defaulters (Top 5)</h2>
+        <table class="data-table" id="overviewDefaultersTable">
+          <thead><tr><th>Name</th><th>Roll No.</th><th>Course</th><th>Outstanding</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODULE: STUDENTS -->
+    <section class="module" id="module-students">
+      <div class="module-head module-head-row">
+        <div>
+          <h1>Student Management</h1>
+          <p class="module-sub">Master record for all enrolled students.</p>
+        </div>
+        <button class="btn btn-primary" id="btnAddStudent">+ Add Student</button>
+      </div>
+      <div class="panel">
+        <div class="table-toolbar">
+          <input type="text" id="studentSearch" class="input" placeholder="Search by name, roll number, or course..." />
+        </div>
+        <table class="data-table" id="studentsTable">
+          <thead>
+            <tr>
+              <th>Name</th><th>Roll No.</th><th>Course</th><th>Year</th>
+              <th>Attendance</th><th>Dues</th><th>Hostel</th><th>Transport</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODULE: ATTENDANCE -->
+    <section class="module" id="module-attendance">
+      <div class="module-head">
+        <h1>Attendance Tracking</h1>
+        <p class="module-sub">Toggle today's status per student &mdash; KPI metrics update instantly.</p>
+      </div>
+      <div class="panel">
+        <table class="data-table" id="attendanceTable">
+          <thead><tr><th>Name</th><th>Roll No.</th><th>Today</th><th>Overall %</th><th>History</th><th>Toggle</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODULE: FEES -->
+    <section class="module" id="module-fees">
+      <div class="module-head">
+        <h1>Fee Collection &amp; Dues</h1>
+        <p class="module-sub">Track payments and outstanding balances across the student body.</p>
+      </div>
+      <div class="panel">
+        <table class="data-table" id="feesTable">
+          <thead><tr><th>Name</th><th>Roll No.</th><th>Total Fees</th><th>Paid</th><th>Outstanding</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODULE: HOSTEL -->
+    <section class="module" id="module-hostel">
+      <div class="module-head">
+        <h1>Hostel Allocation</h1>
+        <p class="module-sub">Occupancy across all residential blocks.</p>
+      </div>
+      <div class="card-grid" id="hostelGrid"></div>
+    </section>
+
+    <!-- MODULE: TRANSPORT -->
+    <section class="module" id="module-transport">
+      <div class="module-head">
+        <h1>Transport Allocation</h1>
+        <p class="module-sub">Route capacity and driver assignments.</p>
+      </div>
+      <div class="card-grid" id="transportGrid"></div>
+    </section>
+
+    <!-- MODULE: EXAMS -->
+    <section class="module" id="module-exams">
+      <div class="module-head module-head-row">
+        <div>
+          <h1>Exam / Timetable View</h1>
+          <p class="module-sub">Upcoming examination schedule across departments.</p>
+        </div>
+        <button class="btn btn-primary" id="btnAddExam">+ Schedule Exam</button>
+      </div>
+      <div class="panel">
+        <table class="data-table" id="examsTable">
+          <thead><tr><th>Course</th><th>Subject</th><th>Date</th><th>Time</th><th>Room</th><th>Semester</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODULE: SAFETY CENTER -->
+    <section class="module" id="module-safety">
+      <div class="module-head">
+        <h1>Safety &amp; Security Center</h1>
+        <p class="module-sub">Panic alerts, incident tracking, and campus-wide broadcasts.</p>
+      </div>
+      <div class="grid-2">
+        <div class="panel panel-danger">
+          <h2 class="panel-title">Active SOS Alerts</h2>
+          <div class="feed-list" id="sosList"><div class="empty-state">No active alerts.</div></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">Emergency Broadcast</h2>
+          <form id="broadcastForm" class="stacked-form">
+            <input type="text" id="broadcastMessage" class="input" placeholder="Broadcast message to entire campus..." required />
+            <select id="broadcastLevel" class="input">
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="critical">Critical</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Send Broadcast</button>
+          </form>
+          <div class="feed-list" id="broadcastList" style="margin-top:14px;"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="module-head-row" style="margin-bottom:12px;">
+          <h2 class="panel-title" style="margin:0;">Incident Reporting &amp; Tracking</h2>
+          <button class="btn btn-outline" id="btnReportIncident">+ Report Incident</button>
+        </div>
+        <table class="data-table" id="incidentsTable">
+          <thead><tr><th>Type</th><th>Description</th><th>Location</th><th>Severity</th><th>Status</th><th>Reported</th><th>Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODULE: VISITORS -->
+    <section class="module" id="module-visitors">
+      <div class="module-head module-head-row">
+        <div>
+          <h1>Visitor Management</h1>
+          <p class="module-sub">Check visitors in and out of campus premises.</p>
+        </div>
+        <button class="btn btn-primary" id="btnAddVisitor">+ Check-In Visitor</button>
+      </div>
+      <div class="panel">
+        <table class="data-table" id="visitorsTable">
+          <thead><tr><th>Name</th><th>Purpose</th><th>Host</th><th>Check-In</th><th>Check-Out</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODULE: USERS & CREDENTIALS (ADMIN ONLY) -->
+    <section class="module" id="module-users">
+      <div class="module-head">
+        <h1>Users &amp; Credentials</h1>
+        <p class="module-sub">Manage system access, passwords, and password reset requests.</p>
+      </div>
+      
+      <div class="panel">
+        <h2 class="panel-title">Password Reset Requests</h2>
+        <table class="data-table" id="passwordRequestsTable">
+          <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Status</th><th>Requested On</th><th>Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h2 class="panel-title">User Accounts Database</h2>
+        <table class="data-table" id="usersTable">
+          <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Password</th><th>Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MODULE: AI COPILOT -->
+    <section class="module" id="module-copilot">
+      <div class="module-head">
+        <h1>AI Copilot</h1>
+        <p class="module-sub">Local, rule-based operational assistant &mdash; no external API calls.</p>
+      </div>
+      <div class="panel copilot-panel">
+        <div class="copilot-console" id="copilotConsole">
+          <div class="copilot-line copilot-system">
+            <span class="copilot-prompt">SYS&gt;</span> Copilot online. Try: "who are the fee defaulters?", "show low attendance students", "active incidents", "hostel occupancy".
+          </div>
+        </div>
+        <form id="copilotForm" class="copilot-input-row">
+          <span class="copilot-caret">&gt;</span>
+          <input type="text" id="copilotInput" class="copilot-input" placeholder="Ask the AI Copilot..." autocomplete="off" />
+          <button type="submit" class="btn btn-primary">Run Query</button>
+        </form>
+        <div class="copilot-suggestions">
+          <button class="chip" data-q="Who are the fee defaulters?">Fee defaulters</button>
+          <button class="chip" data-q="Show students with low attendance">Low attendance</button>
+          <button class="chip" data-q="Any active emergency or SOS alerts?">Active threats</button>
+          <button class="chip" data-q="Hostel occupancy status">Hostel status</button>
+          <button class="chip" data-q="Transport route status">Transport status</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STUDENT PORTAL
+         ============================================================ -->
+    <section class="module" id="module-student-home">
+      <div class="module-head">
+        <h1 id="studentPortalGreeting">My Dashboard</h1>
+        <p class="module-sub">Your personal academic summary &amp; campus information.</p>
+      </div>
+
+      <div class="stat-card-row" id="studentStatCards"></div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2 class="panel-title">&#9989; My Attendance</h2>
+          <div id="studentAttendanceDetail"></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">&#8377; My Fees &amp; Dues</h2>
+          <div id="studentFeesDetail"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2 class="panel-title">&#8962; Hostel &amp; &#9992; Transport</h2>
+          <div id="studentHostelTransport"></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">&#128197; My Upcoming Exams</h2>
+          <div id="studentExams"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel panel-danger">
+          <h2 class="panel-title">&#128680; Campus Safety Notices</h2>
+          <div class="feed-list" id="studentSafetyFeed"></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">&#9888; Report Safety Incident</h2>
+          <form id="studentIncidentForm" class="stacked-form">
+            <div class="field"><label>Incident Type</label><input class="input" name="type" required placeholder="e.g. Ragging, Suspicious Activity"/></div>
+            <div class="field"><label>Description</label><textarea class="input" name="description" rows="3" required></textarea></div>
+            <div class="field"><label>Location</label><input class="input" name="location" required/></div>
+            <div class="field"><label>Severity</label>
+              <select class="input" name="severity"><option>Low</option><option selected>Medium</option><option>High</option></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Report</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         TEACHER PORTAL
+         ============================================================ -->
+    <section class="module" id="module-teacher-home">
+      <div class="module-head">
+        <h1 id="teacherPortalGreeting">Faculty Dashboard</h1>
+        <p class="module-sub">Class management, attendance, and campus safety reporting.</p>
+      </div>
+
+      <div class="stat-card-row" id="teacherStatCards"></div>
+
+      <div class="panel">
+        <div class="module-head-row" style="margin-bottom:12px;">
+          <h2 class="panel-title" style="margin:0;">&#9989; Today's Attendance Sheet</h2>
+          <span class="hint-role role-teacher" id="teacherDeptBadge">Dept</span>
+        </div>
+        <table class="data-table" id="teacherAttendanceTable">
+          <thead><tr><th>Name</th><th>Roll No.</th><th>Course</th><th>Today</th><th>Overall %</th><th>Toggle</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2 class="panel-title">&#128197; Exam Timetable</h2>
+          <div id="teacherExams"></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">&#9888; Report Safety Incident</h2>
+          <form id="teacherIncidentForm" class="stacked-form">
+            <div class="field"><label>Incident Type</label><input class="input" name="type" required placeholder="e.g. Ragging, Suspicious Activity"/></div>
+            <div class="field"><label>Description</label><textarea class="input" name="description" rows="3" required></textarea></div>
+            <div class="field"><label>Location</label><input class="input" name="location" required/></div>
+            <div class="field"><label>Severity</label>
+              <select class="input" name="severity"><option>Low</option><option selected>Medium</option><option>High</option></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Report</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PARENT PORTAL
+         ============================================================ -->
+    <section class="module" id="module-parent-home">
+      <div class="module-head">
+        <h1 id="parentPortalGreeting">Parent Dashboard</h1>
+        <p class="module-sub">Monitor your ward's academic progress and campus status.</p>
+      </div>
+
+      <div class="stat-card-row" id="parentStatCards"></div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2 class="panel-title">&#9989; Ward's Attendance</h2>
+          <div id="parentAttendanceDetail"></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">&#8377; Fee Status</h2>
+          <div id="parentFeesDetail"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2 class="panel-title">&#8962; Hostel &amp; &#9992; Transport</h2>
+          <div id="parentHostelTransport"></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">&#128197; Upcoming Exams</h2>
+          <div id="parentExams"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="module-head-row" style="margin-bottom:12px;">
+          <h2 class="panel-title" style="margin:0;">&#128100; My Campus Visit Log</h2>
+          <button class="btn btn-outline btn-sm" id="btnParentCheckin">+ Request Visit</button>
+        </div>
+        <div id="parentVisitorLog"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel panel-danger">
+          <h2 class="panel-title">&#128680; Campus Safety Notices</h2>
+          <div class="feed-list" id="parentSafetyFeed"></div>
+        </div>
+        <div class="panel">
+          <h2 class="panel-title">&#9888; Report Safety Incident</h2>
+          <form id="parentIncidentForm" class="stacked-form">
+            <div class="field"><label>Incident Type</label><input class="input" name="type" required placeholder="e.g. Ragging, Suspicious Activity"/></div>
+            <div class="field"><label>Description</label><textarea class="input" name="description" rows="3" required></textarea></div>
+            <div class="field"><label>Location</label><input class="input" name="location" required/></div>
+            <div class="field"><label>Severity</label>
+              <select class="input" name="severity"><option>Low</option><option selected>Medium</option><option>High</option></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Report</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /main-area -->
+</div><!-- /app-shell -->
+
+<!-- ============================= MODAL ============================= -->
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" id="modalBox">
+    <div class="modal-head">
+      <h3 id="modalTitle">Title</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

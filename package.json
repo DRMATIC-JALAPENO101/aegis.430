@@ -1,0 +1,15 @@
+{
+  "name": "smart-campus-erp",
+  "version": "1.0.0",
+  "description": "Smart & Safe Campus ERP - Unified ERP + Campus Safety Platform (offline, zero external dependencies)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
